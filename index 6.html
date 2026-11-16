@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{if(localStorage.getItem("lbl:theme")==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Line by Line Lyrics Translate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E131F;
+    --ink: #D6DCE8;
+    --muted: #9FAAC0;
+    --rule: #2B3550;
+    --accent: #F2B33D;
+    --panel: #171E31;
+    --ui: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --serif: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #EEF1F6;
+    --ink: #1C2540;
+    --muted: #55627A;
+    --rule: #C9D2E0;
+    --accent: #C77F00;
+    --panel: #E3E8F1;
+  }
+  .theme { display: flex; justify-content: flex-end; margin-bottom: .75rem; }
+  .theme button {
+    font: inherit; font-size: .85rem; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--rule);
+    padding: .5rem 1rem; cursor: pointer;
+  }
+  .theme button:first-child { border-radius: 6px 0 0 6px; }
+  .theme button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+  .theme button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--ui);
+    line-height: 1.5;
+  }
+  body { min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; }
+  main { max-width: 680px; width: 100%; margin: 0 auto; padding: 2.5rem 1.25rem 2rem; flex: 1 0 auto; }
+  h1 { font-size: 1.75rem; line-height: 1.15; margin: 0 0 .35rem; letter-spacing: -.01em; }
+  .sub { margin: 0 0 1.75rem; color: var(--muted); }
+
+  form { display: flex; gap: .5rem; }
+  textarea {
+    font: inherit; color: var(--ink); resize: vertical;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: .75rem .9rem;
+  }
+  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details .box button.primary { align-self: flex-start; }
+  input[type="text"], input[type="password"] {
+    flex: 1; min-width: 0;
+    font: inherit; color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: .75rem .9rem;
+  }
+  input:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  button.primary {
+    font: inherit; font-weight: 600;
+    background: var(--ink); color: var(--bg);
+    border: 0; border-radius: 6px;
+    padding: .75rem 1.1rem; cursor: pointer;
+  }
+  button.primary:disabled { opacity: .5; cursor: default; }
+
+  details { margin-top: 1rem; color: var(--muted); font-size: .9rem; }
+  summary { cursor: pointer; width: fit-content; }
+  details .box { margin-top: .6rem; display: flex; flex-direction: column; gap: .5rem; }
+  details p { margin: 0; }
+
+  #status { margin: 1.5rem 0 0; min-height: 1.5rem; color: var(--muted); }
+  #status.error { color: var(--ink); border-left: 3px solid var(--accent); padding-left: .75rem; }
+  #status button { font: inherit; background: none; border: 0; padding: 0; color: var(--ink); text-decoration: underline; cursor: pointer; }
+
+  #song { margin-top: 2rem; display: none; }
+  #song h2 { font-family: var(--ui); font-weight: 700; font-size: 1.6rem; line-height: 1.2; margin: 0; }
+  #song .meta { margin: .3rem 0 0; color: var(--muted); font-size: .95rem; }
+
+  #lyrics { list-style: none; margin: 1.25rem 0 0; padding: 0; }
+  .pair { margin: 0 0 .8rem; }
+  .orig { font-family: var(--serif); font-size: 1.43rem; line-height: 1.3; }
+  .eng {
+    margin-top: .1rem; padding-left: .7rem;
+    border-left: 2px solid var(--accent);
+    color: var(--muted); font-family: var(--serif); font-size: 1.2rem; line-height: 1.35;
+    min-height: 1.5rem;
+  }
+  .rom {
+    margin-top: .1rem; padding-left: .7rem;
+    border-left: 2px solid var(--rule);
+    color: var(--ink); opacity: .85; font-family: var(--serif); font-style: italic;
+    font-size: 1.2rem; line-height: 1.35; min-height: 1.5rem;
+  }
+  .rom:empty:not(.pending) { display: none; }
+  .eng.pending { border-left-color: var(--rule); }
+  .rom.pending::after, .eng.pending::after {
+    content: ""; display: block; height: .6rem; width: 55%;
+    margin-top: .25rem; border-radius: 4px; background: var(--rule);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .gap { height: .9rem; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  @media (prefers-reduced-motion: reduce) { .rom.pending::after, .eng.pending::after { animation: none; } }
+
+  .credit { margin: 0; padding: 0 1rem 1rem; text-align: center; font-size: .8rem; color: var(--muted); }
+  #others { display: none; }
+  #others ul { list-style: none; padding: 0; margin: .6rem 0 0; }
+  #discoverList { list-style: none; padding: 0; margin: 0; }
+  .row { display: flex; gap: .5rem; }
+  #discoverMsg { min-height: 1.4rem; }
+  .flags { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .flag {
+    display: flex; flex-direction: column; align-items: center; gap: .3rem;
+    min-width: 4.6rem; font: inherit; line-height: 1; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 8px;
+    padding: .5rem .5rem .45rem; cursor: pointer;
+  }
+  .flag .fl { display: block; border-radius: 3px; box-shadow: 0 0 0 1px rgba(128,128,128,.35); }
+  .flag .flname { font-size: .78rem; color: var(--muted); }
+  .flag[aria-pressed="true"] { border-color: var(--accent); }
+  .flag:disabled { opacity: .6; cursor: default; }
+  #others li button, #discoverList li button {
+    font: inherit; color: var(--ink); background: none;
+    border: 0; border-bottom: 1px solid var(--rule);
+    width: 100%; text-align: left; padding: .6rem 0; cursor: pointer;
+  }
+  #others li button span, #discoverList li button span { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div class="theme" role="group" aria-label="Theme">
+    <button type="button" data-theme-btn="dark" aria-pressed="true">Dark</button>
+    <button type="button" data-theme-btn="light" aria-pressed="false">Light</button>
+  </div>
+  <h1>Line by Line Lyrics Translate</h1>
+  <p class="sub">Type a song, an artist, or both. Each lyric line appears with its English translation underneath. For songs in other alphabets (Russian, Korean, Japanese…) a line in English letters appears in between, so you can read the words aloud.</p>
+
+  <form id="search">
+    <input id="q" type="text" placeholder="e.g. Bad Bunny Tití Me Preguntó" autocomplete="off" required autofocus>
+    <button class="primary" id="go" type="submit">Find lyrics</button>
+  </form>
+
+  <details id="settings">
+    <summary>Translation settings</summary>
+    <div class="box">
+      <select id="provider" aria-label="Translation service">
+        <option value="gemini">Google Gemini (free key)</option>
+        <option value="claude">Claude (paid key)</option>
+      </select>
+      <p id="keyHelp"></p>
+      <input id="key" type="password" autocomplete="off" aria-label="API key">
+      <input id="model" type="text" autocomplete="off" aria-label="Gemini model name" placeholder="Gemini model, e.g. gemini-3.5-flash-lite">
+    </div>
+  </details>
+
+  <details id="discover">
+    <summary>Don’t know which song? Get ideas</summary>
+    <div class="box">
+      <div class="flags" role="group" aria-label="Language you are learning">
+        <button type="button" class="flag" data-lang="spanish" title="Spanish" aria-label="Spanish" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#AA151B"/><rect x="0" y="5" width="30" height="10" fill="#F1BF00"/></svg><span class="flname">Spanish</span></button>
+        <button type="button" class="flag" data-lang="french" title="French" aria-label="French" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="10" height="20" fill="#002395"/><rect x="10" y="0" width="10" height="20" fill="#FFFFFF"/><rect x="20" y="0" width="10" height="20" fill="#ED2939"/></svg><span class="flname">French</span></button>
+        <button type="button" class="flag" data-lang="german" title="German" aria-label="German" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="7" fill="#000000"/><rect x="0" y="6.67" width="30" height="6.67" fill="#DD0000"/><rect x="0" y="13.33" width="30" height="6.67" fill="#FFCE00"/></svg><span class="flname">German</span></button>
+        <button type="button" class="flag" data-lang="italian" title="Italian" aria-label="Italian" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="10" height="20" fill="#009246"/><rect x="10" y="0" width="10" height="20" fill="#FFFFFF"/><rect x="20" y="0" width="10" height="20" fill="#CE2B37"/></svg><span class="flname">Italian</span></button>
+        <button type="button" class="flag" data-lang="portuguese" title="Portuguese" aria-label="Portuguese" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#009C3B"/><polygon points="15,2 27.5,10 15,18 2.5,10" fill="#FFDF00"/><circle cx="15" cy="10" r="4.3" fill="#002776"/><path d="M10.9 9.3 Q15 8 19.1 11.2" stroke="#fff" stroke-width=".8" fill="none"/></svg><span class="flname">Portuguese</span></button>
+        <button type="button" class="flag" data-lang="japanese" title="Japanese" aria-label="Japanese" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#FFFFFF"/><circle cx="15" cy="10" r="6" fill="#BC002D"/></svg><span class="flname">Japanese</span></button>
+        <button type="button" class="flag" data-lang="korean" title="Korean" aria-label="Korean" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#FFFFFF"/><circle cx="15" cy="10" r="5" fill="#CD2E3A"/><path d="M10 10 A5 5 0 0 0 20 10 A2.5 2.5 0 0 0 15 10 A2.5 2.5 0 0 1 10 10Z" fill="#0047A0"/><g transform="translate(5 3.7) rotate(-56.3)" fill="#000"><rect x="-2.4" y="-1.9" width="4.8" height=".8"/><rect x="-2.4" y="-0.5999999999999999" width="4.8" height=".8"/><rect x="-2.4" y="0.7000000000000002" width="4.8" height=".8"/></g><g transform="translate(25 3.7) rotate(56.3)" fill="#000"><rect x="-2.4" y="-1.9" width="2.0" height=".8"/><rect x=".4" y="-1.9" width="2.0" height=".8"/><rect x="-2.4" y="-0.5999999999999999" width="4.8" height=".8"/><rect x="-2.4" y="0.7000000000000002" width="2.0" height=".8"/><rect x=".4" y="0.7000000000000002" width="2.0" height=".8"/></g><g transform="translate(5 16.3) rotate(56.3)" fill="#000"><rect x="-2.4" y="-1.9" width="4.8" height=".8"/><rect x="-2.4" y="-0.5999999999999999" width="2.0" height=".8"/><rect x=".4" y="-0.5999999999999999" width="2.0" height=".8"/><rect x="-2.4" y="0.7000000000000002" width="4.8" height=".8"/></g><g transform="translate(25 16.3) rotate(-56.3)" fill="#000"><rect x="-2.4" y="-1.9" width="2.0" height=".8"/><rect x=".4" y="-1.9" width="2.0" height=".8"/><rect x="-2.4" y="-0.5999999999999999" width="2.0" height=".8"/><rect x=".4" y="-0.5999999999999999" width="2.0" height=".8"/><rect x="-2.4" y="0.7000000000000002" width="2.0" height=".8"/><rect x=".4" y="0.7000000000000002" width="2.0" height=".8"/></g></svg><span class="flname">Korean</span></button>
+        <button type="button" class="flag" data-lang="chinese" title="Chinese" aria-label="Chinese" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#DE2910"/><polygon points="5.00,2.20 5.67,4.27 7.85,4.27 6.09,5.55 6.76,7.63 5.00,6.35 3.24,7.63 3.91,5.55 2.15,4.27 4.33,4.27" fill="#FFDE00"/><polygon points="9.16,2.54 9.62,1.98 9.23,1.37 9.90,1.63 10.36,1.07 10.32,1.79 11.00,2.06 10.30,2.24 10.25,2.97 9.86,2.36" fill="#FFDE00"/><polygon points="11.01,4.17 11.66,3.83 11.53,3.11 12.05,3.62 12.70,3.28 12.38,3.94 12.90,4.44 12.18,4.34 11.86,4.99 11.73,4.27" fill="#FFDE00"/><polygon points="11.03,6.75 11.76,6.71 11.94,6.00 12.20,6.68 12.93,6.63 12.37,7.10 12.64,7.77 12.02,7.38 11.46,7.84 11.64,7.14" fill="#FFDE00"/><polygon points="9.22,8.58 9.90,8.83 10.35,8.26 10.32,8.99 11.00,9.25 10.30,9.44 10.26,10.16 9.87,9.56 9.16,9.75 9.62,9.18" fill="#FFDE00"/></svg><span class="flname">Chinese</span></button>
+        <button type="button" class="flag" data-lang="russian" title="Russian" aria-label="Russian" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="6.67" fill="#FFFFFF"/><rect x="0" y="6.67" width="30" height="6.67" fill="#0039A6"/><rect x="0" y="13.33" width="30" height="6.67" fill="#D52B1E"/></svg><span class="flname">Russian</span></button>
+        <button type="button" class="flag" data-lang="georgian" title="Georgian" aria-label="Georgian" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#FFFFFF"/><rect x="13.2" y="0" width="3.6" height="20" fill="#FF0000"/><rect x="0" y="8.2" width="30" height="3.6" fill="#FF0000"/><rect x="5.0" y="3.5999999999999996" width="3.2" height="1" fill="#FF0000"/><rect x="6.1" y="2.4999999999999996" width="1" height="3.2" fill="#FF0000"/><rect x="21.799999999999997" y="3.5999999999999996" width="3.2" height="1" fill="#FF0000"/><rect x="22.9" y="2.4999999999999996" width="1" height="3.2" fill="#FF0000"/><rect x="5.0" y="15.4" width="3.2" height="1" fill="#FF0000"/><rect x="6.1" y="14.3" width="1" height="3.2" fill="#FF0000"/><rect x="21.799999999999997" y="15.4" width="3.2" height="1" fill="#FF0000"/><rect x="22.9" y="14.3" width="1" height="3.2" fill="#FF0000"/></svg><span class="flname">Georgian</span></button>
+        <button type="button" class="flag" data-lang="czech" title="Czech" aria-label="Czech" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="10" fill="#FFFFFF"/><rect x="0" y="10" width="30" height="10" fill="#D7141A"/><polygon points="0,0 15,10 0,20" fill="#11457E"/></svg><span class="flname">Czech</span></button>
+        <button type="button" class="flag" data-lang="polish" title="Polish" aria-label="Polish" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="10" fill="#FFFFFF"/><rect x="0" y="10" width="30" height="10" fill="#DC143C"/></svg><span class="flname">Polish</span></button>
+        <button type="button" class="flag" data-lang="hungarian" title="Hungarian" aria-label="Hungarian" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="6.67" fill="#CE2939"/><rect x="0" y="6.67" width="30" height="6.67" fill="#FFFFFF"/><rect x="0" y="13.33" width="30" height="6.67" fill="#477050"/></svg><span class="flname">Hungarian</span></button>
+        <button type="button" class="flag" data-lang="dutch" title="Dutch" aria-label="Dutch" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="6.67" fill="#AE1C28"/><rect x="0" y="6.67" width="30" height="6.67" fill="#FFFFFF"/><rect x="0" y="13.33" width="30" height="6.67" fill="#21468B"/></svg><span class="flname">Dutch</span></button>
+        <button type="button" class="flag" data-lang="turkish" title="Turkish" aria-label="Turkish" aria-pressed="false"><svg class="fl" viewBox="0 0 30 20" width="44" height="29" aria-hidden="true"><rect x="0" y="0" width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.4" cy="10" r="4" fill="#E30A17"/><polygon points="19.30,10.00 17.43,10.61 17.43,12.57 16.28,10.98 14.42,11.59 15.57,10.00 14.42,8.41 16.28,9.02 17.43,7.43 17.43,9.39" fill="#fff"/></svg><span class="flname">Turkish</span></button>
+      </div>
+      <p id="discoverMsg" role="status">Tap a flag to get song ideas.</p>
+      <ul id="discoverList"></ul>
+    </div>
+  </details>
+
+  <details id="others">
+    <summary>Not the right song? Other matches</summary>
+    <ul id="otherList"></ul>
+  </details>
+
+  <details id="pasteBox">
+    <summary>Lyrics not found? Paste them yourself</summary>
+    <div class="box">
+      <textarea id="paste" rows="8" placeholder="Paste the lyrics here, one line per row" aria-label="Lyrics to translate"></textarea>
+      <button class="primary" id="pasteGo" type="button">Translate pasted lyrics</button>
+    </div>
+  </details>
+
+  <p id="status" role="status"></p>
+
+  <section id="song">
+    <h2 id="title"></h2>
+    <p class="meta" id="meta"></p>
+    <ol id="lyrics"></ol>
+  </section>
+
+</main>
+
+<p class="credit">Designed by Petr Hejduk</p>
+
+<script>
+const MODEL = "claude-sonnet-5-5";
+const $ = s => document.querySelector(s);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  store.set("lbl:theme", t);
+  document.querySelectorAll("[data-theme-btn]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.themeBtn === t)));
+}
+document.querySelectorAll("[data-theme-btn]").forEach(b =>
+  b.addEventListener("click", () => applyTheme(b.dataset.themeBtn)));
+applyTheme(store.get("lbl:theme") === "light" ? "light" : "dark");
+
+let runId = 0; // guards against late responses from an earlier search
+
+const keyInput = $("#key");
+const providerSel = $("#provider");
+providerSel.value = store.get("lbl:provider") || "gemini";
+function syncProviderUI() {
+  const gem = providerSel.value === "gemini";
+  keyInput.value = store.get("lbl:key:" + providerSel.value) || "";
+  keyInput.placeholder = gem ? "AIza…" : "sk-ant-…";
+  $("#keyHelp").textContent = gem
+    ? "Get a free key at aistudio.google.com (Get API key). No credit card needed. It stays in this browser only."
+    : "Paste your Anthropic API key (console.anthropic.com). It stays in this browser only.";
+}
+providerSel.addEventListener("change", () => {
+  store.set("lbl:provider", providerSel.value);
+  syncProviderUI();
+});
+keyInput.addEventListener("change", () => store.set("lbl:key:" + providerSel.value, keyInput.value.trim()));
+syncProviderUI();
+
+function setStatus(msg, isError = false) {
+  const el = $("#status");
+  el.textContent = msg;
+  el.className = isError ? "error" : "";
+  return el;
+}
+
+$("#search").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("#q").value.trim();
+  if (!q) return;
+  const id = ++runId;
+  $("#go").disabled = true;
+  $("#song").style.display = "none";
+  $("#others").style.display = "none";
+  setStatus("Searching for lyrics…");
+  try {
+    const hits = await findTracks(q);
+    if (id !== runId) return;
+    if (!hits.length) {
+      $("#pasteBox").open = true;
+      setStatus("No lyrics found for “" + q + "” in the LRCLIB database. Check the spelling, or paste the lyrics yourself below.", true);
+      return;
+    }
+    renderOthers(hits.slice(1, 7));
+    await showTrack(hits[0], id);
+  } catch (err) {
+    if (id === runId) setStatus(err.message || "Something went wrong while searching.", true);
+  } finally {
+    $("#go").disabled = false;
+  }
+});
+
+async function lrclib(params) {
+  const res = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(params));
+  if (!res.ok) throw new Error("The lyrics service returned an error (" + res.status + ").");
+  return res.json();
+}
+
+// Handles "title from artist" / "title by artist", then falls back to field search.
+async function findTracks(q) {
+  const clean = q.replace(/^song\s+/i, "").trim();
+  const m = clean.match(/^(.+?)\s+(?:from|by)\s+(.+)$/i);
+  const attempts = [{ q: m ? m[1] + " " + m[2] : clean }];
+  if (m) attempts.push({ track_name: m[1].trim(), artist_name: m[2].trim() }, { q: m[1].trim() });
+  const found = new Map();
+  for (const a of attempts) {
+    const list = await lrclib(a);
+    list.forEach(t => {
+      if (!t.instrumental && (t.plainLyrics || t.syncedLyrics) && !found.has(t.id)) found.set(t.id, t);
+    });
+    if (found.size) break;
+  }
+  return [...found.values()];
+}
+
+$("#pasteGo").addEventListener("click", () => {
+  const text = $("#paste").value.trim();
+  if (!text) return;
+  let h = 0;
+  for (const c of text) h = (h * 31 + c.codePointAt(0)) | 0;
+  const id = ++runId;
+  $("#others").style.display = "none";
+  showTrack({ id: "paste" + h, trackName: "Pasted lyrics", artistName: "", plainLyrics: text }, id);
+});
+
+function renderOthers(list) {
+  const ul = $("#otherList");
+  ul.textContent = "";
+  list.forEach(t => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = t.trackName + " ";
+    const s = document.createElement("span");
+    s.textContent = "– " + t.artistName + (t.albumName ? " (" + t.albumName + ")" : "");
+    b.appendChild(s);
+    b.addEventListener("click", () => {
+      const id = ++runId;
+      $("#others").open = false;
+      showTrack(t, id);
+    });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+  $("#others").style.display = list.length ? "block" : "none";
+}
+
+// Turn LRCLIB lyrics into [{text}] with blank entries marking stanza breaks.
+function toLines(track) {
+  let raw = track.plainLyrics;
+  if (!raw) raw = track.syncedLyrics.replace(/^\s*\[[^\]]*\]\s?/gm, "");
+  const out = [];
+  raw.split(/\r?\n/).forEach(l => {
+    const text = l.trim();
+    if (!text && (!out.length || !out[out.length - 1].text)) return;
+    out.push({ text });
+  });
+  while (out.length && !out[out.length - 1].text) out.pop();
+  return out;
+}
+
+async function showTrack(track, id) {
+  const lines = toLines(track);
+  $("#title").textContent = track.trackName;
+  $("#meta").textContent = track.artistName + (track.albumName ? " · " + track.albumName : "");
+  const ol = $("#lyrics");
+  ol.textContent = "";
+  const engEls = [];
+  const needRoman = wantsRoman(lines.filter(l => l.text).map(l => l.text));
+  lines.forEach(l => {
+    const li = document.createElement("li");
+    if (!l.text) {
+      li.className = "gap";
+    } else {
+      li.className = "pair";
+      const o = document.createElement("div");
+      o.className = "orig";
+      o.textContent = l.text;
+      const e = document.createElement("div");
+      e.className = "eng pending";
+      if (needRoman && hasNonLatin(l.text)) {
+        const r = document.createElement("div");
+        r.className = "rom pending";
+        e.rom = r;
+        li.append(o, r, e);
+      } else {
+        li.append(o, e);
+      }
+      engEls.push(e);
+    }
+    ol.appendChild(li);
+  });
+  $("#song").style.display = "block";
+  setStatus("");
+
+  const texts = lines.filter(l => l.text).map(l => l.text);
+  await translate(track, texts, engEls, id);
+}
+
+async function translate(track, texts, engEls, id) {
+  const roman = wantsRoman(texts);
+  const cacheKey = "lbl:tr2:" + track.id;
+  let result = null;
+  try { result = JSON.parse(store.get(cacheKey) || "null"); } catch {}
+
+  if (!result) {
+    const key = keyInput.value.trim();
+    if (!key) {
+      engEls.forEach(e => { if (e.rom) e.rom.remove(); e.remove(); });
+      $("#settings").open = true;
+      setStatus("Lyrics loaded. Add an API key under “Translation settings” to see the translation (a Google Gemini key is free).", true);
+      return;
+    }
+    const t0 = Date.now();
+    const timer = setInterval(() => {
+      if (id === runId) setStatus("Translating… " + Math.round((Date.now() - t0) / 1000) + "s");
+    }, 1000);
+    setStatus("Translating…");
+    try {
+      // Repeated lines (choruses, hooks) are translated once and reused everywhere.
+      const norm = s => s.toLowerCase().replace(/[\p{P}\p{S}\s]+/gu, " ").trim();
+      const uniq = [], seen = new Map(), slot = [];
+      texts.forEach(t => {
+        const k = norm(t) || t;
+        if (!seen.has(k)) { seen.set(k, uniq.length); uniq.push(t); }
+        slot.push(seen.get(k));
+      });
+      const groups = uniq.map(() => []);
+      slot.forEach((u, i) => groups[u].push(i));
+      try {
+        const part = providerSel.value === "gemini"
+          ? await callGemini(key, uniq, (start, arr, rom) => {
+              if (id !== runId) return;
+              arr.forEach((t, k) => {
+                (groups[start + k] || []).forEach(i => {
+                  const el = engEls[i];
+                  if (el) setLine(el, t, rom && rom[k]);
+                });
+              });
+            }, roman)
+          : await callClaude(key, uniq, roman);
+        result = {
+          language: part.language,
+          unique: uniq.length,
+          lines: texts.map((_, i) => part.lines[slot[i]] || ""),
+          romanized: roman ? texts.map((_, i) => (part.romanized || [])[slot[i]] || "") : null
+        };
+      } finally {
+        clearInterval(timer);
+      }
+    } catch (err) {
+      if (id !== runId) return;
+      engEls.forEach(e => setPending(e, false));
+      const el = setStatus(err.message + " ", true);
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.textContent = "Try again";
+      retry.addEventListener("click", () => {
+        engEls.forEach(e => setPending(e, true));
+        translate(track, texts, engEls, id);
+      });
+      el.appendChild(retry);
+      return;
+    }
+    store.set(cacheKey, JSON.stringify(result));
+  }
+  if (id !== runId) return;
+
+  engEls.forEach((e, i) => setLine(e, result.lines[i] || "", result.romanized && result.romanized[i]));
+  const mismatch = result.lines.length !== texts.length;
+  setStatus(
+    (result.language ? result.language + " → English. " : "") +
+    (result.unique && result.unique < texts.length ? "Repeated lines reused (" + result.unique + " unique of " + texts.length + "). " : "") +
+    (mismatch ? "Some lines may be misaligned; try again if the translation looks off." : ""),
+    mismatch
+  );
+}
+
+const modelInput = $("#model");
+modelInput.value = store.get("lbl:model") || "gemini-3.5-flash-lite";
+let geminiMode = 0; // remembers which "thinking" setting the chosen model accepts
+modelInput.addEventListener("change", () => { store.set("lbl:model", modelInput.value.trim()); geminiMode = 0; });
+function geminiModel() { return modelInput.value.trim() || "gemini-3.5-flash-lite"; }
+
+
+// ---- Romanization: for songs in non-Latin alphabets, show the line in English letters between original and translation. ----
+const hasNonLatin = s => [...s].some(c => /\p{L}/u.test(c) && !/\p{Script=Latin}/u.test(c));
+const wantsRoman = texts => texts.length > 0 && texts.filter(hasNonLatin).length >= Math.max(1, texts.length * 0.2);
+function setPending(e, on) {
+  e.classList.toggle("pending", on);
+  if (e.rom) e.rom.classList.toggle("pending", on);
+}
+function setLine(e, eng, rom) {
+  e.classList.remove("pending");
+  e.textContent = eng;
+  if (e.rom) { e.rom.classList.remove("pending"); e.rom.textContent = rom || ""; }
+}
+function systemPrompt(n, roman) {
+  return "You translate song lyrics for language learners. Translate each line into natural, faithful English. " +
+    "Keep the meaning of idioms and slang, and stay close to the structure of the original line so a learner can match words. " +
+    "If a line is already in English, repeat it unchanged. " +
+    (roman
+      ? "Also give a \"romanized\" version of every line: the same line written as it is pronounced, using only plain English-alphabet letters A-Z " +
+        "(no accents, macrons or special symbols), keeping word spacing, so a learner can read it aloud. Do not translate it. " +
+        "Use Hepburn romaji for Japanese (write particles as pronounced: wa, e, o), Revised Romanization for Korean, pinyin for Chinese, " +
+        "and standard Latin transliteration for Russian and other Cyrillic, Greek, Arabic, Hebrew, Thai, Hindi etc. " +
+        "If a line is already in Latin letters, repeat it unchanged. "
+      : "") +
+    "Reply with JSON only, no code fences: {\"language\": \"<source language, in English>\", \"lines\": [<exactly " + n + " strings, in the same order as the input>]" +
+    (roman ? ", \"romanized\": [<exactly " + n + " strings, in the same order as the input>]" : "") + "}.";
+}
+
+// Few, larger chunks, one after another: the free tier allows only a handful of requests per minute.
+async function callGemini(key, lines, onPart, roman) {
+  const size = 40, parts = [];
+  for (let i = 0; i < lines.length; i += size) parts.push({ start: i, lines: lines.slice(i, i + size) });
+  const results = [];
+  for (const p of parts) {
+    let r;
+    try { r = await geminiChunk(key, p.lines, roman); }
+    catch (e) {
+      // If Google says "retry in Ns", wait that long and try once more.
+      const m = /retry in ([\d.]+)s/i.exec(e.message);
+      if (!m) throw e;
+      await new Promise(done => setTimeout(done, (Math.ceil(parseFloat(m[1])) + 1) * 1000));
+      r = await geminiChunk(key, p.lines, roman);
+    }
+    if (onPart) onPart(p.start, r.lines, r.romanized);
+    results.push(r);
+  }
+  const out = [], rout = [];
+  results.forEach((r, i) => { for (let k = 0; k < parts[i].lines.length; k++) { out.push(r.lines[k] || ""); rout.push((r.romanized && r.romanized[k]) || ""); } });
+  return { language: (results[0] && results[0].language) || "", lines: out, romanized: rout };
+}
+
+async function geminiChunk(key, lines, roman) {
+  // Turn off slow "thinking" if the model supports it; fall back if the setting is rejected.
+  const modes = [{ thinkingBudget: 0 }, { thinkingLevel: "minimal" }, null];
+  let lastErr;
+  for (let i = geminiMode; i < modes.length; i++) {
+    try { const r = await callGeminiOnce(key, lines, modes[i], roman); geminiMode = i; return r; }
+    catch (e) { lastErr = e; if (!/thinking|invalid argument/i.test(e.message)) throw e; }
+  }
+  throw lastErr;
+}
+
+async function callGeminiOnce(key, lines, thinking, roman) {
+  const system = systemPrompt(lines.length, roman);
+  let res;
+  try {
+    res = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/" + geminiModel() + ":generateContent",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        signal: AbortSignal.timeout(60000),
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: "user", parts: [{ text: JSON.stringify(lines) }] }],
+          generationConfig: Object.assign({ responseMimeType: "application/json" }, thinking ? { thinkingConfig: thinking } : {})
+        })
+      }
+    );
+  } catch (e) {
+    if (e && e.name === "TimeoutError") throw new Error("Gemini (model " + geminiModel() + ") did not answer within 60 seconds.");
+    throw new Error("Could not reach Gemini (" + ((e && e.message) || "network error") + ").");
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data && data.error && data.error.message;
+    throw new Error("Translation failed" + (msg ? ": " + msg : " (" + res.status + ")."));
+  }
+  const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+  const text = parts.map(p => p.text || "").join("");
+  const start = text.indexOf("{"), end = text.lastIndexOf("}");
+  try {
+    const parsed = JSON.parse(text.slice(start, end + 1));
+    if (!Array.isArray(parsed.lines)) throw 0;
+    return { language: parsed.language || "", lines: parsed.lines.map(String), romanized: Array.isArray(parsed.romanized) ? parsed.romanized.map(String) : [] };
+  } catch {
+    throw new Error("The translation came back in an unexpected format.");
+  }
+}
+
+// ---- Song ideas: no AI or key needed. Famous songs per language, or common words searched in the lyrics database. ----
+const SONGS = {
+  spanish: ["Luis Fonsi|Despacito","Shakira|La Tortura","Shakira|Ojos Así","Enrique Iglesias|Bailando","Bad Bunny|Tití Me Preguntó","Bad Bunny|Me Porto Bonito","J Balvin|Mi Gente","Maná|Rayando el Sol","Juanes|La Camisa Negra","Juanes|A Dios le Pido","Jesse & Joy|Espacio Sideral","Rosalía|Malamente","Daddy Yankee|Gasolina","Ricky Martin|Vida","Gloria Estefan|Mi Tierra","Los Lobos|La Bamba","Soda Stereo|De Música Ligera","Álvaro Soler|El Mismo Sol","Álvaro Soler|Sofia","Natalia Lafourcade|Hasta la Raíz","Carlos Vives|La Bicicleta","Mecano|Hijo de la Luna","Manu Chao|Me Gustas Tú","Julieta Venegas|Me Voy","Alejandro Sanz|Corazón Partío","Pablo Alborán|Solo Dios","Selena|Bidi Bidi Bom Bom","Celia Cruz|La Vida Es un Carnaval","Gipsy Kings|Bamboléo","Camila|Mientes"],
+  french: ["Édith Piaf|La Vie en Rose","Édith Piaf|Non, je ne regrette rien","Stromae|Papaoutai","Stromae|Alors on danse","Stromae|Formidable","Zaz|Je veux","Jacques Brel|Ne me quitte pas","Charles Aznavour|La Bohème","Joe Dassin|Les Champs-Élysées","Françoise Hardy|Tous les garçons et les filles","Indochine|L'Aventurier","Maître Gims|Sapés comme jamais","Angèle|Balance ton quoi","Louane|Avenir","Vianney|Je m'en vais","Renaud|Mistral gagnant","Serge Gainsbourg|La Javanaise","Yves Montand|Les Feuilles mortes","Charles Trenet|La Mer","Mylène Farmer|Désenchantée","Coeur de pirate|Comme des enfants","Francis Cabrel|Je l'aime à mourir","Indila|Dernière danse","Julien Doré|Kiss me","Christophe Maé|On s'attache","Aya Nakamura|Djadja","Soprano|Mon Everest","Christine and the Queens|Saint Claude","Céline Dion|Pour que tu m'aimes encore","Alizée|Moi... Lolita"],
+  german: ["Nena|99 Luftballons","Rammstein|Du hast","Rammstein|Sonne","Rammstein|Ich will","Kraftwerk|Das Model","Peter Fox|Alles neu","Peter Fox|Schüttel deinen Speck","Silbermond|Das Beste","Mark Forster|Au revoir","Tokio Hotel|Durch den Monsun","Herbert Grönemeyer|Mensch","Herbert Grönemeyer|Männer","Die Toten Hosen|Tage wie diese","Die Ärzte|Schrei nach Liebe","Wir sind Helden|Nur ein Wort","Juli|Perfekte Welle","Cro|Easy","Falco|Rock Me Amadeus","Falco|Der Kommissar","Nena|Irgendwie, irgendwo, irgendwann","AnnenMayKantereit|Pocahontas","Ich + Ich|Vom selben Stern","Clueso|Gewinner","Bosse|Schönste Zeit","Helene Fischer|Atemlos durch die Nacht","Max Giesinger|80 Millionen","Sarah Connor|Wie schön du bist","Element of Crime|Weißes Papier","Udo Lindenberg|Cello","Sportfreunde Stiller|Ein Kompliment"],
+  italian: ["Eros Ramazzotti|Più bella cosa","Eros Ramazzotti|Un'emozione per sempre","Laura Pausini|La solitudine","Laura Pausini|Strani amori","Andrea Bocelli|Con te partirò","Zucchero|Senza una donna","Måneskin|Zitti e buoni","Måneskin|Vent'anni","Tiziano Ferro|Perdono","Tiziano Ferro|Xdono","Jovanotti|Mi fido di te","Jovanotti|Il più grande spettacolo dopo il Big Bang","Nek|Laura non c'è","Ligabue|Certe notti","Vasco Rossi|Albachiara","Vasco Rossi|Vita spericolata","Lucio Battisti|Emozioni","Lucio Dalla|Caruso","Domenico Modugno|Nel blu dipinto di blu","Toto Cutugno|L'italiano","Adriano Celentano|Azzurro","Gianna Nannini|Bello e impossibile","Elisa|Luce","Francesco Gabbani|Occidentali's Karma","Mahmood|Soldi","Ultimo|I tuoi particolari","Marco Mengoni|Esseri umani","Giorgia|Di sole e d'azzurro","Negramaro|Parlami d'amore","Pino Daniele|Napule è"],
+  portuguese: ["Michel Teló|Ai Se Eu Te Pego","Tom Jobim|Garota de Ipanema","Caetano Veloso|Sozinho","Jorge Ben Jor|Mas Que Nada","Legião Urbana|Eduardo e Mônica","Legião Urbana|Pais e Filhos","Skank|Garota Nacional","Tribalistas|Já Sei Namorar","Marisa Monte|Ainda Bem","Luan Santana|Meteoro","Jota Quest|Dias Melhores","Charlie Brown Jr.|Zóio de Lula","Roberto Carlos|Detalhes","Gilberto Gil|Aquele Abraço","Djavan|Flor de Lis","Seu Jorge|Tive Razão","Mariza|Gente da Minha Terra","Amália Rodrigues|Estranha Forma de Vida","Anavitória|Trevo (Tu)","Tiago Iorc|Amei Te Ver","Natiruts|Presente de um Beija-Flor","Paula Fernandes|Pra Você","Nando Reis|Por Onde Andei","Gusttavo Lima|Balada","Maria Gadú|Shimbalaiê","Roupa Nova|Dona","Os Paralamas do Sucesso|Lourinha Bombril","Cazuza|Exagerado","Los Hermanos|Anna Júlia","Anitta|Envolver"]
+};
+const WORDS = {
+  japanese: ["愛","夢","空","君","夜","花","恋","海"],
+  korean: ["사랑","밤","꿈","바다","하늘","별","눈물","그대"],
+  russian: ["любовь","ночь","сердце","небо","мечта","дорога","звезда","город"],
+  czech: ["láska","srdce","noc","slunce","léto","cesta","domov","sen"],
+  polish: ["miłość","serce","noc","marzenia","słońce","droga","lato","dom"],
+  dutch: ["liefde","hart","nacht","droom","zon","zomer","weg","thuis"],
+  chinese: ["爱","梦","心","夜","天空","月亮","风","想你"],
+  georgian: ["სიყვარული","გული","ღამე","მზე","ზღვა","სახლი","ვარსკვლავი","მთა"],
+  hungarian: ["szerelem","szív","éjszaka","álom","nap","nyár","út","otthon"],
+  turkish: ["aşk","gönül","gece","rüya","yıldız","deniz","sevgi","yol"]
+};
+const ALIASES = {
+  "español": "spanish", "espanol": "spanish", "français": "french", "francais": "french",
+  "deutsch": "german", "italiano": "italian", "português": "portuguese", "portugues": "portuguese",
+  "日本語": "japanese", "한국어": "korean", "русский": "russian", "čeština": "czech", "cestina": "czech",
+  "polski": "polish", "中文": "chinese", "ქართული": "georgian", "magyar": "hungarian", "nederlands": "dutch", "türkçe": "turkish", "turkce": "turkish"
+};
+const SUPPORTED = "Spanish, French, German, Italian, Portuguese, Japanese, Korean, Russian, Czech, Polish, Hungarian, Dutch, Chinese, Georgian or Turkish";
+
+const shownSongs = new Set();
+const shownTitles = new Set();
+const shuffle = a => {
+  const b = a.slice();
+  for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
+  return b;
+};
+const plain = s => s.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/[\p{P}\p{S}\s]+/gu, " ").trim();
+const hasLyrics = t => !t.instrumental && (t.plainLyrics || t.syncedLyrics);
+
+// Returns an array of LRCLIB tracks, or null if the language isn't supported.
+async function ideasFor(lang) {
+  const key = ALIASES[lang] || lang;
+  if (SONGS[key]) {
+    const picks = shuffle(SONGS[key].filter(x => !shownSongs.has(x))).slice(0, 12);
+    const found = await Promise.all(picks.map(async x => {
+      const [artist, title] = x.split("|");
+      try {
+        const res = await lrclib({ track_name: title, artist_name: artist });
+        const first = plain(artist).split(" ")[0];
+        const hit = res.find(t => hasLyrics(t) && plain(t.artistName).includes(first));
+        if (hit) hit._src = x;
+        return hit || null;
+      } catch { return null; }
+    }));
+    return found.filter(Boolean);
+  }
+  if (WORDS[key]) {
+    const words = shuffle(WORDS[key]).slice(0, 4);
+    const batches = await Promise.all(words.map(async w => {
+      try {
+        const res = await lrclib({ q: w });
+        return res.filter(t => hasLyrics(t) && !shownSongs.has(String(t.id)) &&
+          (t.plainLyrics || t.syncedLyrics).toLowerCase().includes(w));
+      } catch { return []; }
+    }));
+    // Mix the words: take one song per word in turn, so one popular title can't fill the whole list.
+    const lists = batches.map(shuffle), mixed = [];
+    for (let i = 0; lists.some(l => i < l.length); i++) lists.forEach(l => { if (i < l.length) mixed.push(l[i]); });
+    return mixed;
+  }
+  return null;
+}
+
+async function suggestSongs(lang) {
+  const msg = $("#discoverMsg"), list = $("#discoverList");
+  const flagBtns = document.querySelectorAll(".flag");
+  flagBtns.forEach(b => { b.disabled = true; b.setAttribute("aria-pressed", String(b.dataset.lang === lang)); });
+  const name = (document.querySelector('.flag[data-lang="' + lang + '"]') || {}).title || "";
+  list.textContent = "";
+  msg.textContent = "Looking for " + name + " songs…";
+  try {
+    const tracks = await ideasFor(lang);
+    if (tracks === null) {
+      msg.textContent = "No ideas for that language yet. Search a song by name instead.";
+      return;
+    }
+    const seenIds = new Set(), seenArtists = new Set(), seenTitles = new Set(shownTitles), top = [];
+    for (const t of tracks) {
+      const a = plain(t.artistName);
+      const ti = plain(t.trackName);
+      if (seenIds.has(t.id) || seenArtists.has(a) || seenTitles.has(ti)) continue;
+      seenIds.add(t.id); seenArtists.add(a); seenTitles.add(ti); top.push(t);
+      if (top.length === 5) break;
+    }
+    top.forEach(t => { shownSongs.add(t._src || String(t.id)); shownTitles.add(plain(t.trackName)); });
+    top.forEach(t => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = t.trackName + " ";
+      const sp = document.createElement("span");
+      sp.textContent = "– " + t.artistName;
+      b.appendChild(sp);
+      b.addEventListener("click", () => {
+        const id = ++runId;
+        $("#discover").open = false;
+        $("#others").style.display = "none";
+        showTrack(t, id);
+        $("#song").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+    msg.textContent = top.length
+      ? name + ": tap a song to load it, or tap the flag again for different ones."
+      : "No new songs found this time. Tap the flag again.";
+  } catch (e) {
+    msg.textContent = e.message || "Something went wrong.";
+  } finally {
+    flagBtns.forEach(b => { b.disabled = false; });
+  }
+}
+document.querySelectorAll(".flag").forEach(b => b.addEventListener("click", () => suggestSongs(b.dataset.lang)));
+
+async function callClaude(key, lines, roman) {
+  const system = systemPrompt(lines.length, roman);
+  let res;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: roman ? 16000 : 8000,
+        system,
+        messages: [{ role: "user", content: JSON.stringify(lines) }]
+      })
+    });
+  } catch {
+    throw new Error("Could not reach the translation service. Check your connection.");
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data && data.error && data.error.message;
+    throw new Error("Translation failed" + (msg ? ": " + msg : " (" + res.status + ").") );
+  }
+  const text = (data.content || []).map(b => b.text || "").join("");
+  const start = text.indexOf("{"), end = text.lastIndexOf("}");
+  try {
+    const parsed = JSON.parse(text.slice(start, end + 1));
+    if (!Array.isArray(parsed.lines)) throw 0;
+    return { language: parsed.language || "", lines: parsed.lines.map(String), romanized: Array.isArray(parsed.romanized) ? parsed.romanized.map(String) : [] };
+  } catch {
+    throw new Error("The translation came back in an unexpected format.");
+  }
+}
+</script>
+</body>
+</html>
